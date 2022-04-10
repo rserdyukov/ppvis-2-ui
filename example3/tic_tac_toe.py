@@ -10,7 +10,6 @@ Config.set("graphics", "resizable", "0")
 Config.set("graphics", "width", "300")
 Config.set("graphics", "height", "300")
 
-
 class Model:
     def __init__(self):
         self.coordinate = (
@@ -18,7 +17,7 @@ class Model:
             (0, 3, 6), (1, 4, 7), (2, 5, 8),  # Y
             (0, 4, 8), (2, 4, 6),  # D
         )
-        self.items = [''] * 9
+        self.items = ['']*9
         self.switch = True
 
     def click(self, index):
@@ -57,11 +56,35 @@ class Presenter:
         return self.model.tic_tac_toe()
 
 
-class TicTackToe(App):
+class View(BoxLayout):
     def __init__(self):
         super().__init__()
         self.buttons = []
         self.controller = Presenter()
+
+        self.orientation = "vertical"
+        self.padding = 5
+
+        grid = GridLayout(cols=3)
+        for _ in range(9):
+            button = Button(
+                color=[0, 0, 0, 1],
+                font_size=24,
+                disabled=False,
+                on_press=self.click
+            )
+            self.buttons.append(button)
+            grid.add_widget(button)
+
+        self.add_widget(grid)
+
+        self.add_widget(
+            Button(
+                text="Restart",
+                size_hint=[1, .1],
+                on_press=self.restart
+            )
+        )
 
     def click(self, arg):
         arg.disabled = True
@@ -85,33 +108,15 @@ class TicTackToe(App):
             button.text = ""
             button.disabled = False
 
+
+class TicTackToe(App):
+    def __init__(self):
+        super().__init__()
+
     def build(self):
         self.title = "Tic Tack Toe"
-
-        root = BoxLayout(orientation="vertical", padding=5)
-
-        grid = GridLayout(cols=3)
-        for _ in range(9):
-            button = Button(
-                color=[0, 0, 0, 1],
-                font_size=24,
-                disabled=False,
-                on_press=self.click
-            )
-            self.buttons.append(button)
-            grid.add_widget(button)
-
-        root.add_widget(grid)
-
-        root.add_widget(
-            Button(
-                text="Restart",
-                size_hint=[1, .1],
-                on_press=self.restart
-            )
-        )
-
-        return root
+        view = View()
+        return view
 
 
 if __name__ == "__main__":
