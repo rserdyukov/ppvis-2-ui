@@ -6,6 +6,8 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.button import Button
 from kivy.config import Config
 
+from abc import abstractmethod
+
 Config.set("graphics", "resizable", "0")
 Config.set("graphics", "width", "300")
 Config.set("graphics", "height", "300")
@@ -38,13 +40,45 @@ class Model:
             if vector(item).count('X') == 3 or vector(item).count('O') == 3:
                 return item
 
+class IView:
 
-class Presenter:
-    def __init__(self):
+    @abstractmethod
+    def click(self, arg):
+        pass
+
+    @abstractmethod
+    def restart(self, arg):
+        pass
+
+    @abstractmethod
+    def finishGame(self, winPos):
+        pass
+
+class IPresenter:
+
+    @abstractmethod
+    def click(self, index):
+        pass
+
+    @abstractmethod
+    def getItems(self):
+        pass
+
+    @abstractmethod
+    def restart(self):
+        pass
+
+
+class Presenter(IPresenter):
+    def __init__(self, view: IView):
         self.model = Model()
+        self.view = view
 
     def click(self, index):
         self.model.click(index)
+        winPos = self.model.tic_tac_toe()
+        if winPos is not None:
+            self.view.finishGame(winPos)
 
     def getItems(self):
         return self.model.items
@@ -52,15 +86,12 @@ class Presenter:
     def restart(self):
         self.model.restart()
 
-    def tic_tac_toe(self):
-        return self.model.tic_tac_toe()
 
-
-class View(BoxLayout):
+class View(BoxLayout, IView):
     def __init__(self):
         super().__init__()
         self.buttons = []
-        self.controller = Presenter()
+        self.presenter = Presenter(self)
 
         self.orientation = "vertical"
         self.padding = 5
@@ -88,20 +119,19 @@ class View(BoxLayout):
 
     def click(self, arg):
         arg.disabled = True
-        self.controller.click(self.buttons.index(arg))
-        arg.text = self.controller.getItems()[self.buttons.index(arg)]
+        self.presenter.click(self.buttons.index(arg))
+        arg.text = self.presenter.getItems()[self.buttons.index(arg)]
 
+    def finishGame(self, winPos):
         color = [0, 1, 0, 1]
 
-        item = self.controller.tic_tac_toe()
-        if item is not None:
-            for i in item:
-                self.buttons[i].color = color
-            for button in self.buttons:
-                button.disabled = True
+        for i in winPos:
+            self.buttons[i].color = color
+        for button in self.buttons:
+            button.disabled = True
 
     def restart(self, arg):
-        self.controller.restart()
+        self.presenter.restart()
 
         for button in self.buttons:
             button.color = [0, 0, 0, 1]
